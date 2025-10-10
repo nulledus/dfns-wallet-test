@@ -10,3 +10,12 @@ Content-Type: application/json
   "userActionHttpPath": "/auth/registration/delegated",
   "userActionServerKind": "Api"
 }
+
+### init registration
+
+POST {{host}}/auth/register/init
+Content-Type: application/json
+
+{
+  "username": "test@test.test"
+}
