@@ -53,3 +53,18 @@ export class UserActionSignatureChallengeResponseDto {
   externalAuthenticationUrl?: string;
   allowCredentials: AllowCredentials;
 }
+
+// Placeholder for complete action DTOs
+// export class CompleteUserActionSignatureDto {
+//   @IsString()
+//   challengeIdentifier: string;
+//
+//   @IsString()
+//   signature: string;
+//
+//   // Add other fields as needed
+// }
+//
+// export class CompleteUserActionSignatureResponseDto {
+//   // Define response structure
+// }

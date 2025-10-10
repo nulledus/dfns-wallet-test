@@ -5,14 +5,14 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { DfnsService } from '../services/dfns.service';
+import { DfnsService } from '../../../../services/dfns.service';
 import {
   CreateUserActionSignatureChallengeDto,
   UserActionSignatureChallengeResponseDto,
-} from '../dto/user-action-signing.dto';
+} from '../dto/user-action.dto';
 
 @Controller('auth/action')
-export class UserActionSigningController {
+export class UserActionController {
   constructor(private readonly dfnsService: DfnsService) {}
 
   @Post('init')
@@ -40,4 +40,12 @@ export class UserActionSigningController {
       );
     }
   }
+
+  // Placeholder for the complete endpoint
+  // @Post('complete')
+  // async completeUserActionSignature(
+  //   @Body() completeDto: CompleteUserActionSignatureDto,
+  // ): Promise<CompleteUserActionSignatureResponseDto> {
+  //   // Implementation will be added later
+  // }
 }

@@ -5,7 +5,7 @@ import { AsymmetricKeySigner } from '@dfns/sdk-keysigner';
 import {
   CreateUserActionSignatureChallengeDto,
   UserActionSignatureChallengeResponseDto,
-} from '../dto/user-action-signing.dto';
+} from '../modules/auth/user-action/dto/user-action.dto';
 
 @Injectable()
 export class DfnsService {
