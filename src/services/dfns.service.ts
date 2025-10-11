@@ -364,7 +364,7 @@ export class DfnsService {
         return;
       }
 
-      const url = `${fintecaBaseUrl}/wallets/user-id`;
+      const url = `${fintecaBaseUrl}/wallet/user-id`;
       const payload = {
         email: email,
         wallet_user_id: walletUserId,
