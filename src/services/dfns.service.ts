@@ -1,7 +1,9 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import { DfnsApiClient } from '@dfns/sdk';
 import { AsymmetricKeySigner } from '@dfns/sdk-keysigner';
+import { firstValueFrom } from 'rxjs';
 import {
   CreateUserActionSignatureChallengeDto,
   UserActionSignatureChallengeResponseDto,
@@ -16,7 +18,10 @@ export class DfnsService {
   private readonly dfnsClient: DfnsApiClient;
   private readonly logger = new Logger(DfnsService.name);
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) {
     const baseUrl = this.configService.get<string>(
       'DFNS_BASE_URL',
       this.configService.get<string>('DFNS_API_URL', 'https://api.dfns.ninja'),
@@ -240,6 +245,7 @@ export class DfnsService {
   async completeRegistration(
     temporaryAuthenticationToken: string,
     signedChallenge: { firstFactorCredential: any },
+    email: string,
   ): Promise<RegisterCompleteResponseDto> {
     this.logger.log('Completing delegated registration');
 
@@ -269,6 +275,9 @@ export class DfnsService {
       });
 
       this.logger.log('Successfully completed delegated registration');
+
+      // Call FINTECA API to register the wallet user
+      await this.registerWalletUserInFinteca(email, registration.user.id);
 
       // Return the response
       return registration as RegisterCompleteResponseDto;
@@ -318,6 +327,69 @@ export class DfnsService {
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
+    }
+  }
+
+  private async registerWalletUserInFinteca(
+    email: string,
+    walletUserId: string,
+  ): Promise<void> {
+    this.logger.log('Registering wallet user in FINTECA', {
+      email,
+      walletUserId,
+    });
+
+    try {
+      const fintecaBaseUrl = this.configService.get<string>(
+        'FINTECA_BASE_API_URL',
+      );
+
+      if (!fintecaBaseUrl) {
+        this.logger.warn(
+          'FINTECA_BASE_API_URL not configured, skipping FINTECA registration',
+        );
+        return;
+      }
+
+      const url = `${fintecaBaseUrl}/wallets/user-id`;
+      const payload = {
+        email,
+        wallet_user_id: walletUserId,
+      };
+
+      this.logger.debug('Calling FINTECA API', { url, payload });
+
+      const response = await firstValueFrom(
+        this.httpService.post(url, payload),
+      );
+
+      this.logger.log('Successfully registered wallet user in FINTECA', {
+        status: response.status,
+        data: response.data,
+      });
+    } catch (error) {
+      this.logger.error('Error registering wallet user in FINTECA:', error);
+
+      // Log the error but don't throw it - we don't want FINTECA failures to break registration
+      if (error.response) {
+        this.logger.error('FINTECA API error response:', {
+          status: error.response.status,
+          data: error.response.data,
+        });
+      }
+
+      // Optionally, you can choose to throw if FINTECA registration is critical
+      // For now, we'll just log and continue
+      throw new HttpException(
+        {
+          message: 'Failed to register wallet user in FINTECA',
+          error:
+            error.response?.data || error.message || 'Unknown error occurred',
+          statusCode:
+            error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
