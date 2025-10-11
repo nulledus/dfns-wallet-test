@@ -6,7 +6,10 @@ import {
   CreateUserActionSignatureChallengeDto,
   UserActionSignatureChallengeResponseDto,
 } from '../modules/auth/user-action/dto/user-action.dto';
-import { RegisterInitResponseDto } from '../modules/auth/register/dto/register.dto';
+import {
+  RegisterInitResponseDto,
+  RegisterCompleteResponseDto,
+} from '../modules/auth/register/dto/register.dto';
 
 @Injectable()
 export class DfnsService {
@@ -187,6 +190,90 @@ export class DfnsService {
         'Error creating delegated registration challenge:',
         error,
       );
+
+      // Handle Dfns API errors
+      if (error.response) {
+        this.logger.error('Dfns API error response:', {
+          status: error.response.status,
+          data: error.response.data,
+        });
+        throw new HttpException(
+          {
+            message: 'Dfns API error',
+            error: error.response.data || error.message,
+            statusCode: error.response.status,
+          },
+          error.response.status,
+        );
+      } else if (error.request) {
+        // Network error
+        this.logger.error(
+          'Network error when calling Dfns API:',
+          error.message,
+        );
+        throw new HttpException(
+          {
+            message: 'Network error when calling Dfns API',
+            error: error.message || 'Unable to reach Dfns API',
+            statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+          },
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
+      } else {
+        // Other error
+        this.logger.error('Unexpected error:', error);
+        throw new HttpException(
+          {
+            message: 'Internal server error',
+            error:
+              error instanceof Error
+                ? error.message
+                : 'An unexpected error occurred',
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
+  async completeRegistration(
+    temporaryAuthenticationToken: string,
+    signedChallenge: { firstFactorCredential: any },
+  ): Promise<RegisterCompleteResponseDto> {
+    this.logger.log('Completing delegated registration');
+
+    try {
+      const baseUrl = this.configService.get<string>(
+        'DFNS_BASE_URL',
+        this.configService.get<string>(
+          'DFNS_API_URL',
+          'https://api.dfns.ninja',
+        ),
+      );
+      const orgId = this.configService.get<string>('DFNS_ORG_ID');
+
+      // Create a new DFNS client with the temporary authentication token
+      const tempClient = new DfnsApiClient({
+        baseUrl,
+        orgId,
+        authToken: temporaryAuthenticationToken,
+      });
+
+      // Complete the registration with wallets
+      const registration = await tempClient.auth.registerEndUser({
+        body: {
+          ...signedChallenge,
+          wallets: [{ network: 'EthereumSepolia' }],
+        },
+      });
+
+      this.logger.log('Successfully completed delegated registration');
+
+      // Return the response
+      return registration as RegisterCompleteResponseDto;
+    } catch (error) {
+      this.logger.error('Error completing delegated registration:', error);
 
       // Handle Dfns API errors
       if (error.response) {
