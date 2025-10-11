@@ -277,7 +277,7 @@ export class DfnsService {
 
       // Extract email from registration.user.name
       // The DFNS API returns name in the user object, but the SDK types don't include it
-      const email = (registration.user as any).name;
+      const email = (registration.user as any).username;
 
       if (!email) {
         this.logger.warn('No email found in registration.user.name');
