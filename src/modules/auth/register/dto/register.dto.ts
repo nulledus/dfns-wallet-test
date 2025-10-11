@@ -38,10 +38,6 @@ export class RegisterCompleteDto {
 
   @IsString()
   temporaryAuthenticationToken: string;
-
-  @IsEmail()
-  @IsString()
-  email: string;
 }
 
 export class WalletDto {
@@ -63,6 +59,7 @@ export class RegisterCompleteResponseDto {
   user: {
     id: string;
     username: string;
+    name?: string;
     orgId: string;
     permissions?: any[];
   };

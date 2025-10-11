@@ -245,7 +245,6 @@ export class DfnsService {
   async completeRegistration(
     temporaryAuthenticationToken: string,
     signedChallenge: { firstFactorCredential: any },
-    email: string,
   ): Promise<RegisterCompleteResponseDto> {
     this.logger.log('Completing delegated registration');
 
@@ -276,11 +275,25 @@ export class DfnsService {
 
       this.logger.log('Successfully completed delegated registration');
 
-      // Call FINTECA API to register the wallet user
-      await this.registerWalletUserInFinteca(email, registration.user.id);
+      // Extract email from registration.user.name
+      // The DFNS API returns name in the user object, but the SDK types don't include it
+      const email = (registration.user as any).name;
 
-      // Return the response
-      return registration as RegisterCompleteResponseDto;
+      if (!email) {
+        this.logger.warn('No email found in registration.user.name');
+      } else {
+        // Call FINTECA API to register the wallet user with extracted email
+        await this.registerWalletUserInFinteca(email, registration.user.id);
+      }
+
+      // Return the response with the name property included
+      return {
+        ...registration,
+        user: {
+          ...registration.user,
+          name: email,
+        },
+      } as RegisterCompleteResponseDto;
     } catch (error) {
       this.logger.error('Error completing delegated registration:', error);
 
@@ -353,7 +366,7 @@ export class DfnsService {
 
       const url = `${fintecaBaseUrl}/wallets/user-id`;
       const payload = {
-        email,
+        email: email,
         wallet_user_id: walletUserId,
       };
 

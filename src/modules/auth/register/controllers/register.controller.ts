@@ -51,7 +51,6 @@ export class RegisterController {
       return await this.dfnsService.completeRegistration(
         completeDto.temporaryAuthenticationToken,
         completeDto.signedChallenge,
-        completeDto.email,
       );
     } catch (error) {
       // Re-throw HttpException from DfnsService
