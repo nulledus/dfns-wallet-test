@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { NetworksModule } from './modules/networks/networks.module';
+import { WellKnownController } from './controllers/well-known.controller';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { NetworksModule } from './modules/networks/networks.module';
     AuthModule,
     NetworksModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, WellKnownController],
   providers: [AppService],
 })
 export class AppModule {}

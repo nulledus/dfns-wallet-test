@@ -9,12 +9,6 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors();
 
-  // Set content type for apple-app-site-association
-  app.use('/.well-known/apple-app-site-association', (req, res, next) => {
-    res.setHeader('Content-Type', 'application/json');
-    next();
-  });
-
   // Add global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
