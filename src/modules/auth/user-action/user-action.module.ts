@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { UserActionController } from './controllers/user-action.controller';
-import { DfnsService } from '../../../services/dfns.service';
+import { DfnsService } from '@/services/dfns.service';
 
 @Module({
   imports: [HttpModule],

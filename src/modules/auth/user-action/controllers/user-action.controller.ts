@@ -5,7 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { DfnsService } from '../../../../services/dfns.service';
+import { DfnsService } from '@/services/dfns.service';
 import {
   CreateUserActionSignatureChallengeDto,
   UserActionSignatureChallengeResponseDto,

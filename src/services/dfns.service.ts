@@ -7,11 +7,11 @@ import { firstValueFrom } from 'rxjs';
 import {
   CreateUserActionSignatureChallengeDto,
   UserActionSignatureChallengeResponseDto,
-} from '../modules/auth/user-action/dto/user-action.dto';
+} from '@/modules/auth/user-action/dto/user-action.dto';
 import {
   RegisterInitResponseDto,
   RegisterCompleteResponseDto,
-} from '../modules/auth/register/dto/register.dto';
+} from '@/modules/auth/register/dto/register.dto';
 
 @Injectable()
 export class DfnsService {
