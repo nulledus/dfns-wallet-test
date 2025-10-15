@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { NetworksModule } from './modules/networks/networks.module';
+import { PingModule } from './modules/ping/ping.module';
 import { WellKnownController } from './controllers/well-known.controller';
 
 @Module({
@@ -19,6 +20,7 @@ import { WellKnownController } from './controllers/well-known.controller';
     }),
     AuthModule,
     NetworksModule,
+    PingModule,
   ],
   controllers: [AppController, WellKnownController],
   providers: [AppService],
