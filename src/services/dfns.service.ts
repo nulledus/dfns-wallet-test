@@ -11,7 +11,12 @@ import { FintecaService } from './finteca.service';
 
 @Injectable()
 export class DfnsService {
-  private readonly dfnsClient: DfnsApiClient;
+  private dfnsClient: DfnsApiClient;
+  private readonly baseUrl: string | null | undefined;
+  private readonly orgId: string | null | undefined;
+  private readonly authToken: string | null | undefined;
+  private readonly credId: string | null | undefined;
+  private readonly privateKey: string | null | undefined;
   private readonly logger = new Logger(DfnsService.name);
 
   constructor(
@@ -19,22 +24,25 @@ export class DfnsService {
     private readonly httpService: HttpService,
     private readonly fintecaService: FintecaService,
   ) {
-    const baseUrl = this.configService.get<string>(
-      'DFNS_BASE_URL',
-      'https://api.dfns.io',
-    );
-    const orgId = this.configService.get<string>('DFNS_ORG_ID');
-    const authToken = this.configService.get<string>('DFNS_AUTH_TOKEN');
-    const credId = this.configService.get<string>('DFNS_CRED_ID');
-    const privateKey = this.configService.get<string>('DFNS_PRIVATE_KEY');
+    this.baseUrl = this.configService.get<string>('DFNS_BASE_URL');
+    this.orgId = this.configService.get<string>('DFNS_ORG_ID');
+    this.authToken = this.configService.get<string>('DFNS_AUTH_TOKEN');
+    this.credId = this.configService.get<string>('DFNS_CRED_ID');
+    this.privateKey = this.configService.get<string>('DFNS_PRIVATE_KEY');
+  }
 
-    // Validate required configuration
-    if (!orgId || !authToken || !credId || !privateKey) {
+  async onModuleInit() {
+    this.validateConfig();
+    await this.initializeDfnsClient();
+  }
+
+  private validateConfig(): void {
+    if (!this.orgId || !this.authToken || !this.credId || !this.privateKey) {
       const missingVars: string[] = [];
-      if (!orgId) missingVars.push('DFNS_ORG_ID');
-      if (!authToken) missingVars.push('DFNS_AUTH_TOKEN');
-      if (!credId) missingVars.push('DFNS_CRED_ID');
-      if (!privateKey) missingVars.push('DFNS_PRIVATE_KEY');
+      if (!this.orgId) missingVars.push('DFNS_ORG_ID');
+      if (!this.authToken) missingVars.push('DFNS_AUTH_TOKEN');
+      if (!this.credId) missingVars.push('DFNS_CRED_ID');
+      if (!this.privateKey) missingVars.push('DFNS_PRIVATE_KEY');
 
       const errorMessage = `Missing required Dfns configuration: ${missingVars.join(', ')}. Please set these environment variables.`;
       this.logger.error(errorMessage);
@@ -47,36 +55,22 @@ export class DfnsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
 
-    // Initialize the credential signer
+  private async initializeDfnsClient(): Promise<void> {
     const signer = new AsymmetricKeySigner({
-      credId,
-      privateKey,
+      credId: this.credId!,
+      privateKey: this.privateKey!,
     });
 
-    // Initialize the Dfns API client
-    try {
-      this.dfnsClient = new DfnsApiClient({
-        baseUrl,
-        orgId,
-        authToken,
-        signer,
-      });
-      this.logger.log('DfnsService initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize DfnsService:', error);
-      throw new HttpException(
-        {
-          message: 'Service initialization error',
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Failed to initialize Dfns client',
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    this.dfnsClient = new DfnsApiClient({
+      baseUrl: this.baseUrl!,
+      orgId: this.orgId!,
+      authToken: this.authToken!,
+      signer,
+    });
+
+    this.logger.log('DfnsService initialized successfully');
   }
 
   async createDelegatedRegistrationChallenge(
@@ -86,67 +80,14 @@ export class DfnsService {
       username,
     });
 
-    try {
-      // Use the DfnsApiClient to create delegated registration challenge
-      const response =
-        await this.dfnsClient.auth.createDelegatedRegistrationChallenge({
-          body: { kind: 'EndUser', email: username },
-        });
+    const response =
+      await this.dfnsClient.auth.createDelegatedRegistrationChallenge({
+        body: { kind: 'EndUser', email: username },
+      });
 
-      this.logger.log('Successfully created delegated registration challenge');
+    this.logger.log('Successfully created delegated registration challenge');
 
-      // Return the response
-      return response as RegisterInitResponseDto;
-    } catch (error) {
-      this.logger.error(
-        'Error creating delegated registration challenge:',
-        error,
-      );
-
-      // Handle Dfns API errors
-      if (error.response) {
-        this.logger.error('Dfns API error response:', {
-          status: error.response.status,
-          data: error.response.data,
-        });
-        throw new HttpException(
-          {
-            message: 'Dfns API error',
-            error: error.response.data || error.message,
-            statusCode: error.response.status,
-          },
-          error.response.status,
-        );
-      } else if (error.request) {
-        // Network error
-        this.logger.error(
-          'Network error when calling Dfns API:',
-          error.message,
-        );
-        throw new HttpException(
-          {
-            message: 'Network error when calling Dfns API',
-            error: error.message || 'Unable to reach Dfns API',
-            statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          },
-          HttpStatus.SERVICE_UNAVAILABLE,
-        );
-      } else {
-        // Other error
-        this.logger.error('Unexpected error:', error);
-        throw new HttpException(
-          {
-            message: 'Internal server error',
-            error:
-              error instanceof Error
-                ? error.message
-                : 'An unexpected error occurred',
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-    }
+    return response as RegisterInitResponseDto;
   }
 
   async completeRegistration(
@@ -155,101 +96,41 @@ export class DfnsService {
   ): Promise<RegisterCompleteResponseDto> {
     this.logger.log('Completing delegated registration');
 
-    try {
-      const baseUrl = this.configService.get<string>(
-        'DFNS_BASE_URL',
-        this.configService.get<string>(
-          'DFNS_API_URL',
-          'https://api.dfns.ninja',
-        ),
-      );
-      const orgId = this.configService.get<string>('DFNS_ORG_ID');
+    // Create a new DFNS client with the temporary authentication token
+    const tempClient = new DfnsApiClient({
+      baseUrl: this.baseUrl!,
+      orgId: this.orgId!,
+      authToken: temporaryAuthenticationToken,
+    });
 
-      // Create a new DFNS client with the temporary authentication token
-      const tempClient = new DfnsApiClient({
-        baseUrl,
-        orgId,
-        authToken: temporaryAuthenticationToken,
-      });
+    // Complete the registration with wallets
+    const registration = await tempClient.auth.registerEndUser({
+      body: {
+        ...signedChallenge,
+        wallets: [{ network: 'EthereumSepolia' }],
+      },
+    });
 
-      // Complete the registration with wallets
-      const registration = await tempClient.auth.registerEndUser({
-        body: {
-          ...signedChallenge,
-          wallets: [{ network: 'EthereumSepolia' }],
-        },
-      });
+    this.logger.log('Successfully completed delegated registration');
 
-      this.logger.log('Successfully completed delegated registration');
+    // Extract email from registration.user.name
+    // The DFNS API returns name in the user object, but the SDK types don't include it
+    const email = (registration.user as any).username;
 
-      // Extract email from registration.user.name
-      // The DFNS API returns name in the user object, but the SDK types don't include it
-      const email = (registration.user as any).username;
-
-      if (!email) {
-        this.logger.warn('No email found in registration.user.name');
-      } else {
-        // Call FINTECA API to register the wallet user with extracted email
-        await this.fintecaService.registerWalletUser(
-          email,
-          registration.user.id,
-        );
-      }
-
-      // Return the response with the name property included
-      return {
-        ...registration,
-        user: {
-          ...registration.user,
-          name: email,
-        },
-      } as RegisterCompleteResponseDto;
-    } catch (error) {
-      this.logger.error('Error completing delegated registration:', error);
-
-      // Handle Dfns API errors
-      if (error.response) {
-        this.logger.error('Dfns API error response:', {
-          status: error.response.status,
-          data: error.response.data,
-        });
-        throw new HttpException(
-          {
-            message: 'Dfns API error',
-            error: error.response.data || error.message,
-            statusCode: error.response.status,
-          },
-          error.response.status,
-        );
-      } else if (error.request) {
-        // Network error
-        this.logger.error(
-          'Network error when calling Dfns API:',
-          error.message,
-        );
-        throw new HttpException(
-          {
-            message: 'Network error when calling Dfns API',
-            error: error.message || 'Unable to reach Dfns API',
-            statusCode: HttpStatus.SERVICE_UNAVAILABLE,
-          },
-          HttpStatus.SERVICE_UNAVAILABLE,
-        );
-      } else {
-        // Other error
-        this.logger.error('Unexpected error:', error);
-        throw new HttpException(
-          {
-            message: 'Internal server error',
-            error:
-              error instanceof Error
-                ? error.message
-                : 'An unexpected error occurred',
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+    if (!email) {
+      this.logger.warn('No email found in registration.user.name');
+    } else {
+      // Call FINTECA API to register the wallet user with extracted email
+      await this.fintecaService.registerWalletUser(email, registration.user.id);
     }
+
+    // Return the response with the name property included
+    return {
+      ...registration,
+      user: {
+        ...registration.user,
+        name: email,
+      },
+    } as RegisterCompleteResponseDto;
   }
 }
