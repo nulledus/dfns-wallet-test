@@ -6,7 +6,7 @@ export class RegisterInitDto {
   username: string;
 }
 
-export class RegisterInitResponseDto {
+export class InitRegistrationResponseDto {
   temporaryAuthenticationToken: string;
   challenge: string;
   rp?: {

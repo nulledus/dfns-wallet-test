@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { DfnsService } from '@/services/dfns.service';
 import {
   RegisterInitDto,
-  RegisterInitResponseDto,
+  InitRegistrationResponseDto,
   RegisterCompleteDto,
   RegisterCompleteResponseDto,
 } from '../dto/register.dto';
@@ -14,7 +14,7 @@ export class RegisterController {
   @Post('init')
   async registerInit(
     @Body() registerDto: RegisterInitDto,
-  ): Promise<RegisterInitResponseDto> {
+  ): Promise<InitRegistrationResponseDto> {
     return await this.dfnsService.initRegistration(registerDto.username);
   }
 

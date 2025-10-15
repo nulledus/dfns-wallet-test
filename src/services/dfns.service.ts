@@ -4,7 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { DfnsApiClient } from '@dfns/sdk';
 import { AsymmetricKeySigner } from '@dfns/sdk-keysigner';
 import {
-  RegisterInitResponseDto,
+  InitRegistrationResponseDto,
   RegisterCompleteResponseDto,
 } from '@/modules/auth/register/dto/register.dto';
 import { FintecaService } from './finteca.service';
@@ -44,13 +44,15 @@ export class DfnsService {
     this.logger.log('DfnsService initialized successfully');
   }
 
-  async initRegistration(username: string): Promise<RegisterInitResponseDto> {
+  async initRegistration(
+    username: string,
+  ): Promise<InitRegistrationResponseDto> {
     const response =
       await this.dfnsClient.auth.createDelegatedRegistrationChallenge({
         body: { kind: 'EndUser', email: username },
       });
 
-    return response as RegisterInitResponseDto;
+    return response as InitRegistrationResponseDto;
   }
 
   async completeRegistration(
