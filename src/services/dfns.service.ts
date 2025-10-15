@@ -1,6 +1,5 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HttpService } from '@nestjs/axios';
 import { DfnsApiClient } from '@dfns/sdk';
 import { AsymmetricKeySigner } from '@dfns/sdk-keysigner';
 import {
@@ -18,7 +17,6 @@ export class DfnsService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly httpService: HttpService,
     private readonly fintecaService: FintecaService,
   ) {
     this.config = this.configService.get<DfnsConfig>('dfns')!;
@@ -74,25 +72,11 @@ export class DfnsService {
       },
     });
 
-    // Extract email from registration.user.name
-    // The DFNS API returns name in the user object, but the SDK types don't include it
-    // TODO verify
-    // const email = (registration.user as any).username;
-
     await this.fintecaService.registerWalletUser(
       registration.user.username,
       registration.user.id,
     );
 
     return registration as CompleteRegistrationResponseDto;
-
-    // TODO fix
-    // return {
-    //   ...registration,
-    //   user: {
-    //     ...registration.user,
-    //     name: email,
-    //   },
-    // } as CompleteRegistrationResponseDto;
   }
 }
