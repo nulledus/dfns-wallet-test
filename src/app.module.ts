@@ -5,7 +5,7 @@ import { join } from 'path';
 import { AuthModule } from './modules/auth/auth.module';
 import { NetworksModule } from './modules/networks/networks.module';
 import { PingModule } from './modules/ping/ping.module';
-import { WellKnownController } from './controllers/well-known.controller';
+import { WellKnownModule } from './modules/well-known/well-known.module';
 
 @Module({
   imports: [
@@ -19,8 +19,9 @@ import { WellKnownController } from './controllers/well-known.controller';
     AuthModule,
     NetworksModule,
     PingModule,
+    WellKnownModule,
   ],
-  controllers: [WellKnownController],
+  controllers: [],
   providers: [],
 })
 export class AppModule {}
