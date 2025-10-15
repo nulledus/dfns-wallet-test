@@ -24,21 +24,12 @@ export class DfnsService {
   ) {
     const baseUrl = this.configService.get<string>(
       'DFNS_BASE_URL',
-      this.configService.get<string>('DFNS_API_URL', 'https://api.dfns.ninja'),
+      'https://api.dfns.io',
     );
     const orgId = this.configService.get<string>('DFNS_ORG_ID');
     const authToken = this.configService.get<string>('DFNS_AUTH_TOKEN');
     const credId = this.configService.get<string>('DFNS_CRED_ID');
     const privateKey = this.configService.get<string>('DFNS_PRIVATE_KEY');
-
-    // Debug logging to help troubleshoot environment variables
-    this.logger.debug('DFNS Configuration loaded:', {
-      baseUrl,
-      orgId: orgId ? `${orgId.substring(0, 10)}...` : 'NOT_SET',
-      authToken: authToken ? `${authToken.substring(0, 20)}...` : 'NOT_SET',
-      credId: credId ? `${credId.substring(0, 10)}...` : 'NOT_SET',
-      privateKey: privateKey ? 'SET' : 'NOT_SET',
-    });
 
     // Validate required configuration
     if (!orgId || !authToken || !credId || !privateKey) {
