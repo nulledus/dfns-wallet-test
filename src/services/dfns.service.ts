@@ -74,16 +74,10 @@ export class DfnsService {
   }
 
   async initRegistration(username: string): Promise<RegisterInitResponseDto> {
-    this.logger.log('Creating delegated registration challenge', {
-      username,
-    });
-
     const response =
       await this.dfnsClient.auth.createDelegatedRegistrationChallenge({
         body: { kind: 'EndUser', email: username },
       });
-
-    this.logger.log('Successfully created delegated registration challenge');
 
     return response as RegisterInitResponseDto;
   }
@@ -92,8 +86,6 @@ export class DfnsService {
     temporaryAuthenticationToken: string,
     signedChallenge: { firstFactorCredential: any },
   ): Promise<RegisterCompleteResponseDto> {
-    this.logger.log('Completing delegated registration');
-
     // Create a new DFNS client with the temporary authentication token
     const tempClient = new DfnsApiClient({
       baseUrl: this.baseUrl!,
@@ -109,20 +101,14 @@ export class DfnsService {
       },
     });
 
-    this.logger.log('Successfully completed delegated registration');
-
     // Extract email from registration.user.name
     // The DFNS API returns name in the user object, but the SDK types don't include it
+    // TODO verify
     const email = (registration.user as any).username;
 
-    if (!email) {
-      this.logger.warn('No email found in registration.user.name');
-    } else {
-      // Call FINTECA API to register the wallet user with extracted email
-      await this.fintecaService.registerWalletUser(email, registration.user.id);
-    }
+    await this.fintecaService.registerWalletUser(email, registration.user.id);
 
-    // Return the response with the name property included
+    // TODO fix
     return {
       ...registration,
       user: {
