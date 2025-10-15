@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DfnsApiClient } from '@dfns/sdk';
 import { AsymmetricKeySigner } from '@dfns/sdk-keysigner';
@@ -10,7 +10,7 @@ import { FintecaService } from './finteca.service';
 import { DfnsConfig } from '@/config/dfns.config';
 
 @Injectable()
-export class DfnsService {
+export class DfnsService implements OnModuleInit {
   private dfnsClient: DfnsApiClient;
   private readonly config: DfnsConfig;
   private readonly logger = new Logger(DfnsService.name);
