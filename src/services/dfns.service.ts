@@ -73,9 +73,7 @@ export class DfnsService {
     this.logger.log('DfnsService initialized successfully');
   }
 
-  async createDelegatedRegistrationChallenge(
-    username: string,
-  ): Promise<RegisterInitResponseDto> {
+  async initRegistration(username: string): Promise<RegisterInitResponseDto> {
     this.logger.log('Creating delegated registration challenge', {
       username,
     });

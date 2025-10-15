@@ -15,9 +15,7 @@ export class RegisterController {
   async registerInit(
     @Body() registerDto: RegisterInitDto,
   ): Promise<RegisterInitResponseDto> {
-    return await this.dfnsService.createDelegatedRegistrationChallenge(
-      registerDto.username,
-    );
+    return await this.dfnsService.initRegistration(registerDto.username);
   }
 
   @Post('complete')
