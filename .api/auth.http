@@ -1,4 +1,4 @@
-@host = http://localhost:3000
+@host = http://localhost:4242
 
 ### init signing action
 POST {{host}}/auth/action/init
