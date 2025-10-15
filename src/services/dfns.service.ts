@@ -60,34 +60,39 @@ export class DfnsService {
     signedChallenge: { firstFactorCredential: any },
   ): Promise<CompleteRegistrationResponseDto> {
     // Create a new DFNS client with the temporary authentication token
-    const tempClient = new DfnsApiClient({
+    const client = new DfnsApiClient({
       baseUrl: this.config.baseUrl,
       orgId: this.config.orgId,
       authToken: temporaryAuthenticationToken,
     });
 
-    // Complete the registration with wallets
-    const registration = await tempClient.auth.registerEndUser({
+    // Complete the registration
+    const registration = await client.auth.registerEndUser({
       body: {
         ...signedChallenge,
-        wallets: [{ network: 'EthereumSepolia' }],
+        wallets: [{ network: 'EthereumSepolia' }], // TODO: remove, for debug
       },
     });
 
     // Extract email from registration.user.name
     // The DFNS API returns name in the user object, but the SDK types don't include it
     // TODO verify
-    const email = (registration.user as any).username;
+    // const email = (registration.user as any).username;
 
-    await this.fintecaService.registerWalletUser(email, registration.user.id);
+    await this.fintecaService.registerWalletUser(
+      registration.user.username,
+      registration.user.id,
+    );
+
+    return registration as CompleteRegistrationResponseDto;
 
     // TODO fix
-    return {
-      ...registration,
-      user: {
-        ...registration.user,
-        name: email,
-      },
-    } as CompleteRegistrationResponseDto;
+    // return {
+    //   ...registration,
+    //   user: {
+    //     ...registration.user,
+    //     name: email,
+    //   },
+    // } as CompleteRegistrationResponseDto;
   }
 }
