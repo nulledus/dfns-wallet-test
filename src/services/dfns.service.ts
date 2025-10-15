@@ -8,15 +8,12 @@ import {
   RegisterCompleteResponseDto,
 } from '@/modules/auth/register/dto/register.dto';
 import { FintecaService } from './finteca.service';
+import { DfnsConfig } from '@/config/dfns.config';
 
 @Injectable()
 export class DfnsService {
   private dfnsClient: DfnsApiClient;
-  private readonly baseUrl: string | null | undefined;
-  private readonly orgId: string | null | undefined;
-  private readonly authToken: string | null | undefined;
-  private readonly credId: string | null | undefined;
-  private readonly privateKey: string | null | undefined;
+  private readonly config: DfnsConfig;
   private readonly logger = new Logger(DfnsService.name);
 
   constructor(
@@ -24,49 +21,23 @@ export class DfnsService {
     private readonly httpService: HttpService,
     private readonly fintecaService: FintecaService,
   ) {
-    this.baseUrl = this.configService.get<string>('DFNS_BASE_URL');
-    this.orgId = this.configService.get<string>('DFNS_ORG_ID');
-    this.authToken = this.configService.get<string>('DFNS_AUTH_TOKEN');
-    this.credId = this.configService.get<string>('DFNS_CRED_ID');
-    this.privateKey = this.configService.get<string>('DFNS_PRIVATE_KEY');
+    this.config = this.configService.get<DfnsConfig>('dfns')!;
   }
 
   async onModuleInit() {
-    this.validateConfig();
     await this.initializeDfnsClient();
-  }
-
-  private validateConfig(): void {
-    if (!this.orgId || !this.authToken || !this.credId || !this.privateKey) {
-      const missingVars: string[] = [];
-      if (!this.orgId) missingVars.push('DFNS_ORG_ID');
-      if (!this.authToken) missingVars.push('DFNS_AUTH_TOKEN');
-      if (!this.credId) missingVars.push('DFNS_CRED_ID');
-      if (!this.privateKey) missingVars.push('DFNS_PRIVATE_KEY');
-
-      const errorMessage = `Missing required Dfns configuration: ${missingVars.join(', ')}. Please set these environment variables.`;
-      this.logger.error(errorMessage);
-      throw new HttpException(
-        {
-          message: 'Configuration error',
-          error: errorMessage,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
   }
 
   private async initializeDfnsClient(): Promise<void> {
     const signer = new AsymmetricKeySigner({
-      credId: this.credId!,
-      privateKey: this.privateKey!,
+      credId: this.config.credId,
+      privateKey: this.config.privateKey,
     });
 
     this.dfnsClient = new DfnsApiClient({
-      baseUrl: this.baseUrl!,
-      orgId: this.orgId!,
-      authToken: this.authToken!,
+      baseUrl: this.config.baseUrl,
+      orgId: this.config.orgId,
+      authToken: this.config.authToken,
       signer,
     });
 
@@ -88,8 +59,8 @@ export class DfnsService {
   ): Promise<RegisterCompleteResponseDto> {
     // Create a new DFNS client with the temporary authentication token
     const tempClient = new DfnsApiClient({
-      baseUrl: this.baseUrl!,
-      orgId: this.orgId!,
+      baseUrl: this.config.baseUrl,
+      orgId: this.config.orgId,
       authToken: temporaryAuthenticationToken,
     });
 
