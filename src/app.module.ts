@@ -6,11 +6,13 @@ import { WellKnownModule } from './modules/well-known/well-known.module';
 import { PingModule } from './modules/ping/ping.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { NetworksModule } from './modules/networks/networks.module';
+import dfnsConfig from './config/dfns.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [dfnsConfig],
     }),
     FintecaModule,
     DfnsModule,
