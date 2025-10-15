@@ -55,7 +55,7 @@ export class WalletDto {
   custodial?: boolean;
 }
 
-export class RegisterCompleteResponseDto {
+export class CompleteRegistrationResponseDto {
   user: {
     id: string;
     username: string;

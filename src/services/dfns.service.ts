@@ -5,7 +5,7 @@ import { DfnsApiClient } from '@dfns/sdk';
 import { AsymmetricKeySigner } from '@dfns/sdk-keysigner';
 import {
   InitRegistrationResponseDto,
-  RegisterCompleteResponseDto,
+  CompleteRegistrationResponseDto,
 } from '@/modules/auth/register/dto/register.dto';
 import { FintecaService } from './finteca.service';
 import { DfnsConfig } from '@/config/dfns.config';
@@ -58,7 +58,7 @@ export class DfnsService {
   async completeRegistration(
     temporaryAuthenticationToken: string,
     signedChallenge: { firstFactorCredential: any },
-  ): Promise<RegisterCompleteResponseDto> {
+  ): Promise<CompleteRegistrationResponseDto> {
     // Create a new DFNS client with the temporary authentication token
     const tempClient = new DfnsApiClient({
       baseUrl: this.config.baseUrl,
@@ -88,6 +88,6 @@ export class DfnsService {
         ...registration.user,
         name: email,
       },
-    } as RegisterCompleteResponseDto;
+    } as CompleteRegistrationResponseDto;
   }
 }

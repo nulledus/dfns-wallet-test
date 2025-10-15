@@ -4,7 +4,7 @@ import {
   RegisterInitDto,
   InitRegistrationResponseDto,
   RegisterCompleteDto,
-  RegisterCompleteResponseDto,
+  CompleteRegistrationResponseDto,
 } from '../dto/register.dto';
 
 @Controller('auth/register')
@@ -21,7 +21,7 @@ export class RegisterController {
   @Post('complete')
   async registerComplete(
     @Body() completeDto: RegisterCompleteDto,
-  ): Promise<RegisterCompleteResponseDto> {
+  ): Promise<CompleteRegistrationResponseDto> {
     return await this.dfnsService.completeRegistration(
       completeDto.temporaryAuthenticationToken,
       completeDto.signedChallenge,
