@@ -2,7 +2,7 @@ export const dfnsConfig = {
   baseUrl:
     process.env.DFNS_BASE_URL ||
     process.env.DFNS_API_URL ||
-    'https://api.dfns.ninja',
+    'https://api.dfns.io',
   orgId: process.env.DFNS_ORG_ID,
   authToken: process.env.DFNS_AUTH_TOKEN,
   credId: process.env.DFNS_CRED_ID,
